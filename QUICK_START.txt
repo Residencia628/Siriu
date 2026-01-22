@@ -1,0 +1,90 @@
+========================================
+  QUICK START GUIDE
+========================================
+
+PREREQUISITES:
+--------------
+1. MongoDB must be running on localhost:27017
+2. Python 3.8+ installed
+3. Node.js 14+ installed
+
+OPTION 1 - START EVERYTHING (RECOMMENDED):
+------------------------------------------
+Double-click: start-all.bat
+
+This will:
+- Start the backend server on http://localhost:8000
+- Start the frontend server on http://localhost:3000
+- Open both in separate windows
+
+
+OPTION 2 - START INDIVIDUALLY:
+------------------------------
+1. Start Backend:
+   Double-click: start-backend.bat
+   
+2. Start Frontend:
+   Double-click: start-frontend.bat
+
+
+FIRST TIME SETUP:
+-----------------
+Backend:
+  cd backend
+  pip install -r requirements.txt
+
+Frontend:
+  cd frontend
+  npm install
+
+
+ACCESS THE APPLICATION:
+-----------------------
+1. Open browser: http://localhost:3000
+
+2. Login with default credentials:
+   Email: admin@universidad.edu
+   Password: admin123
+
+
+API DOCUMENTATION:
+------------------
+Swagger UI: http://localhost:8000/docs
+ReDoc: http://localhost:8000/redoc
+
+
+MONGODB SETUP:
+--------------
+If MongoDB is not installed:
+1. Download from: https://www.mongodb.com/try/download/community
+2. Install and start the service
+3. Default connection: mongodb://localhost:27017
+
+
+TESTING THE CHANGES:
+--------------------
+The fixed dropdown issue is in:
+- Inventory page filters (Type and Status dropdowns)
+- All Select components throughout the app
+
+Test by:
+1. Login to the application
+2. Go to "Inventario" page
+3. Click on the filter dropdowns (Type and Status)
+4. They should now open smoothly without click interception
+
+
+TROUBLESHOOTING:
+----------------
+If port 3000 or 8000 is in use:
+- Backend: Edit start-backend.bat, change --port 8000 to another port
+- Frontend: It will auto-select the next available port
+
+If MongoDB connection fails:
+- Check if MongoDB service is running
+- Verify connection string in backend/.env
+
+
+STOPPING THE SERVERS:
+---------------------
+Press Ctrl+C in each terminal window or simply close the windows.
