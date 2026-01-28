@@ -1,0 +1,30 @@
+# PASOS PARA DEPLOYAR BACKEND EN RENDER
+
+## 1. Ir a Render Dashboard
+https://dashboard.render.com
+
+## 2. Crear Web Service
+- Click "New +" → "Web Service"
+- Connect GitHub repository: Residencia628/Siriu
+
+## 3. Configuración del Servicio
+
+### Basic Settings:
+Name: siriu-backend
+Region: Oregon (US West)
+Branch: main
+Root Directory: backend
+Environment: Docker
+Plan: Free
+
+### Environment Variables:
+MONGO_URL=mongodb+srv://siriu_admin:oTPO3hVRre59yk6C@siriru.d0ttprt.mongodb.net/siriu?retryWrites=true&w=majority
+DB_NAME=siriu
+USE_FIRESTORE=false
+JWT_SECRET_KEY=(click Generate)
+CORS_ORIGINS=*
+PORT=8080
+
+## 4. Click "Create Web Service"
+## 5. Esperar 5-10 minutos
+## 6. Obtener URL: https://siriu-backend-XXXX.onrender.com

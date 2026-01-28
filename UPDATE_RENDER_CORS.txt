@@ -1,0 +1,11 @@
+# ACTUALIZAR ESTAS VARIABLES EN RENDER DASHBOARD
+
+## Ir a: https://dashboard.render.com
+## Seleccionar servicio: siriu-backend
+## Click en "Environment" en el menú izquierdo
+
+## ACTUALIZAR esta variable:
+CORS_ORIGINS = https://siriu.netlify.app,https://siriu-backend.onrender.com
+
+## Luego click "Save Changes"
+## Render redeployará automáticamente
