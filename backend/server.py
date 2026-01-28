@@ -1383,6 +1383,7 @@ allowed_origins = [
     "http://localhost:3000",  # Local development
     "http://localhost:3001",  # Alternative local port
     "http://127.0.0.1:3000",  # Local IP
+    "null"  # For local file testing
 ]
 
 # Add any additional origins from environment variable
@@ -1395,13 +1396,55 @@ if env_origins:
 
 logger.info(f"CORS Origins configured: {allowed_origins}")
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Custom CORS middleware for flexible origin handling
+class FlexibleCORSMiddleware:
+    def __init__(self, app):
+        self.app = app
+    
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http" and scope["method"] in ["OPTIONS", "GET", "POST", "PUT", "DELETE"]:
+            # Handle CORS preflight
+            if scope["method"] == "OPTIONS":
+                headers = [
+                    (b"access-control-allow-origin", b"*"),
+                    (b"access-control-allow-methods", b"GET, POST, PUT, DELETE, OPTIONS"),
+                    (b"access-control-allow-headers", b"*")
+                ]
+                await send({
+                    "type": "http.response.start",
+                    "status": 200,
+                    "headers": headers
+                })
+                await send({"type": "http.response.body", "body": b""})
+                return
+            
+            # Add CORS headers to regular responses
+            async def send_with_cors(message):
+                if message["type"] == "http.response.start":
+                    headers = message.get("headers", [])
+                    headers.extend([
+                        (b"access-control-allow-origin", b"*"),
+                        (b"access-control-allow-credentials", b"true")
+                    ])
+                    message["headers"] = headers
+                await send(message)
+            
+            await self.app(scope, receive, send_with_cors)
+        else:
+            await self.app(scope, receive, send)
+
+# Apply flexible CORS for development/testing
+if os.getenv("ENVIRONMENT", "production") != "production":
+    app.add_middleware(FlexibleCORSMiddleware)
+else:
+    # Production CORS with specific origins
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=allowed_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 logging.basicConfig(
     level=logging.INFO,
