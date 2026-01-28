@@ -20,15 +20,47 @@ export default function Login() {
     setLoading(true);
 
     try {
-      // Configure axios with better CORS handling
+      // Enhanced axios configuration for better network handling
       const apiClient = axios.create({
         baseURL: API,
-        timeout: 10000,
+        timeout: 15000, // Increased timeout
         headers: {
           'Content-Type': 'application/json',
         },
-        withCredentials: false, // Don't send cookies
+        withCredentials: false,
+        // Add retry configuration
+        retry: 2,
+        retryDelay: 1000
       });
+
+      // Add request interceptor for debugging
+      apiClient.interceptors.request.use(
+        (config) => {
+          console.log('📡 Sending request to:', config.url);
+          console.log('📍 Full URL:', `${config.baseURL}${config.url}`);
+          console.log('📤 Request headers:', config.headers);
+          return config;
+        },
+        (error) => {
+          console.error('❌ Request interceptor error:', error);
+          return Promise.reject(error);
+        }
+      );
+
+      // Add response interceptor
+      apiClient.interceptors.response.use(
+        (response) => {
+          console.log('✅ Response received:', response.status);
+          return response;
+        },
+        (error) => {
+          console.error('❌ Response error:', error);
+          console.error('❌ Error config:', error.config);
+          console.error('❌ Error request:', error.request);
+          console.error('❌ Error response:', error.response);
+          return Promise.reject(error);
+        }
+      );
 
       const response = await apiClient.post(`/auth/login`, {
         email,
@@ -40,18 +72,31 @@ export default function Login() {
       toast.success("Inicio de sesión exitoso");
       navigate("/dashboard");
     } catch (error) {
-      console.error('Login error details:', error);
+      console.error('💥 LOGIN ERROR DETAILS:');
+      console.error('Error object:', error);
+      console.error('Error code:', error.code);
+      console.error('Error message:', error.message);
+      console.error('Error name:', error.name);
       
-      // Better error handling for CORS issues
-      if (error.code === 'NETWORK_ERROR' || error.message.includes('CORS')) {
+      // Enhanced error handling
+      if (error.code === 'NETWORK_ERROR' || error.message.includes('Network Error')) {
+        toast.error("Error de red. Verifica tu conexión a internet.");
+      } else if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+        toast.error("Tiempo de espera agotado. Intenta nuevamente.");
+      } else if (error.message.includes('CORS') || error.message.includes('blocked')) {
         toast.error("Error de permisos CORS. Contacta al administrador.");
-        console.log('CORS Debug Info:');
+        console.log('🔒 CORS Debug Info:');
         console.log('- Backend URL:', API);
         console.log('- Current Origin:', window.location.origin);
-      } else if (error.code === 'ECONNABORTED') {
-        toast.error("Tiempo de conexión agotado. Verifica tu conexión.");
+      } else if (error.response) {
+        // Server responded with error status
+        toast.error(error.response.data?.detail || `Error del servidor: ${error.response.status}`);
+      } else if (error.request) {
+        // Request was made but no response received
+        toast.error("No se recibió respuesta del servidor. Verifica que el backend esté activo.");
       } else {
-        toast.error(error.response?.data?.detail || "Error al iniciar sesión");
+        // Something else happened
+        toast.error("Error desconocido al iniciar sesión");
       }
     } finally {
       setLoading(false);
