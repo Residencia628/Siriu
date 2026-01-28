@@ -20,7 +20,17 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const response = await axios.post(`${API}/auth/login`, {
+      // Configure axios with better CORS handling
+      const apiClient = axios.create({
+        baseURL: API,
+        timeout: 10000,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        withCredentials: false, // Don't send cookies
+      });
+
+      const response = await apiClient.post(`/auth/login`, {
         email,
         password,
       });
@@ -30,7 +40,19 @@ export default function Login() {
       toast.success("Inicio de sesión exitoso");
       navigate("/dashboard");
     } catch (error) {
-      toast.error(error.response?.data?.detail || "Error al iniciar sesión");
+      console.error('Login error details:', error);
+      
+      // Better error handling for CORS issues
+      if (error.code === 'NETWORK_ERROR' || error.message.includes('CORS')) {
+        toast.error("Error de permisos CORS. Contacta al administrador.");
+        console.log('CORS Debug Info:');
+        console.log('- Backend URL:', API);
+        console.log('- Current Origin:', window.location.origin);
+      } else if (error.code === 'ECONNABORTED') {
+        toast.error("Tiempo de conexión agotado. Verifica tu conexión.");
+      } else {
+        toast.error(error.response?.data?.detail || "Error al iniciar sesión");
+      }
     } finally {
       setLoading(false);
     }

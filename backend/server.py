@@ -1376,10 +1376,29 @@ async def reset_user_password(
 # Include router
 app.include_router(api_router)
 
+# Enhanced CORS configuration with fallback
+allowed_origins = [
+    "https://siriu.netlify.app",  # Production frontend
+    "https://siriu-backend.onrender.com",  # Backend domain
+    "http://localhost:3000",  # Local development
+    "http://localhost:3001",  # Alternative local port
+    "http://127.0.0.1:3000",  # Local IP
+]
+
+# Add any additional origins from environment variable
+env_origins = os.environ.get('CORS_ORIGINS', '').strip()
+if env_origins:
+    for origin in env_origins.split(','):
+        clean_origin = origin.strip()
+        if clean_origin and clean_origin not in allowed_origins:
+            allowed_origins.append(clean_origin)
+
+logger.info(f"CORS Origins configured: {allowed_origins}")
+
 app.add_middleware(
     CORSMiddleware,
+    allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -1394,7 +1413,21 @@ logger = logging.getLogger(__name__)
 @app.get("/")
 async def root():
     """Root endpoint"""
-    return {"status": "ok", "message": "SIRIU API is running", "version": "1.0.0"}
+    return {"status": "ok", "message": "SIRIU API is running", "version": "1.0.0", "cors_origins": allowed_origins}
+
+@app.options("/api/auth/login")
+async def login_preflight():
+    """Explicit CORS preflight handler for login endpoint"""
+    return {"message": "CORS preflight accepted"}
+
+@app.get("/debug/cors-info")
+async def cors_debug_info():
+    """Debug endpoint to check CORS configuration"""
+    return {
+        "configured_origins": allowed_origins,
+        "environment_origins": os.environ.get('CORS_ORIGINS', 'Not set'),
+        "current_time": datetime.now(timezone.utc).isoformat()
+    }
 
 @app.get("/health")
 async def health_check():
